@@ -1,0 +1,6 @@
+{
+  "javaVersion": 17,
+  "gradleVersion": "8.8",
+  "loader": "fabric",
+  "mcVersion": "1.20.1"
+}

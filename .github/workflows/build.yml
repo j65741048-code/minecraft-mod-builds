@@ -1,0 +1,36 @@
+name: Build mod
+on:
+  push:
+    branches: ['build-*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - id: cfg
+        run: |
+          echo "java=$(jq -r .javaVersion build.json)" >> "$GITHUB_OUTPUT"
+          echo "gradle=$(jq -r .gradleVersion build.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ steps.cfg.outputs.java }}
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ steps.cfg.outputs.gradle }}
+      - name: Compile
+        run: gradle build --no-daemon --stacktrace
+      - name: Publish jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          jars=()
+          for f in build/libs/*.jar; do
+            case "$f" in *-sources.jar|*-dev.jar|*-javadoc.jar|*-slim.jar) ;; *) jars+=("$f");; esac
+          done
+          if [ ${#jars[@]} -eq 0 ]; then echo "No jar produced"; exit 1; fi
+          gh release create "$GITHUB_REF_NAME" "${jars[@]}" --title "$GITHUB_REF_NAME" --notes "Built automatically" --target "$GITHUB_SHA"

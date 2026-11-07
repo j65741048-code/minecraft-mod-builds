@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"healmod","version":"1.0.0","name":"Heal","entrypoints":{"main":["com.example.HealMod"]},"depends":{"fabricloader":">=0.15.0"}}
